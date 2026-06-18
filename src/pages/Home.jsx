@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import toast from 'react-hot-toast'
+import Swal from 'sweetalert2'
 import API from '../utils/api'
 import ActiveGuidelines from '../components/ActiveGuidelines'
 
@@ -30,15 +30,15 @@ export default function Home() {
   }
 
   const demoFoods = [
-    { _id:'d1', foodName:'Fresh Biryani',     category:'cooked',   quantity:15, unit:'plates',   pickupAddress:'Mingora, Swat',  donor:{name:'Hotel Serena'},       expiryDate:new Date(Date.now()+4*3600000) },
-    { _id:'d2', foodName:'Whole Wheat Bread', category:'bakery',   quantity:12, unit:'loaves',   pickupAddress:'Saidu Sharif',   donor:{name:'Ahmad Bakery'},       expiryDate:new Date(Date.now()+18*3600000) },
-    { _id:'d3', foodName:'Fresh Vegetables',  category:'raw',      quantity:8,  unit:'kg',       pickupAddress:'Matta, Swat',    donor:{name:'Matta Market'},       expiryDate:new Date(Date.now()+12*3600000) },
-    { _id:'d4', foodName:'Pasteurised Milk',  category:'dairy',    quantity:20, unit:'liters',   pickupAddress:'Kabal, Swat',    donor:{name:'Kabal Dairy'},        expiryDate:new Date(Date.now()+6*3600000) },
-    { _id:'d5', foodName:'Cooked Daal',       category:'cooked',   quantity:10, unit:'portions', pickupAddress:'Khwazakhela',    donor:{name:'Community Kitchen'},  expiryDate:new Date(Date.now()+3*3600000) },
-    { _id:'d6', foodName:'Packaged Biscuits', category:'packaged', quantity:30, unit:'packs',    pickupAddress:'Fizagat',        donor:{name:'Al-Noor Store'},      expiryDate:new Date(Date.now()+72*3600000) },
-    { _id:'d7', foodName:'Mixed Salad',       category:'raw',      quantity:6,  unit:'portions', pickupAddress:'Mingora, Swat',  donor:{name:'Green Garden'},       expiryDate:new Date(Date.now()+8*3600000) },
-    { _id:'d8', foodName:'Chicken Karahi',    category:'cooked',   quantity:8,  unit:'plates',   pickupAddress:'Saidu Sharif',   donor:{name:'Taste of Swat'},      expiryDate:new Date(Date.now()+5*3600000) },
-    { _id:'d9', foodName:'Fresh Yogurt',      category:'dairy',    quantity:5,  unit:'kg',       pickupAddress:'Mingora, Swat',  donor:{name:'Local Dairy Farm'},   expiryDate:new Date(Date.now()+24*3600000) },
+    // { _id:'d1', foodName:'Fresh Biryani',     category:'cooked',   quantity:15, unit:'plates',   pickupAddress:'Mingora, Swat',  donor:{name:'Hotel Serena'},       expiryDate:new Date(Date.now()+4*3600000) },
+    // { _id:'d2', foodName:'Whole Wheat Bread', category:'bakery',   quantity:12, unit:'loaves',   pickupAddress:'Saidu Sharif',   donor:{name:'Ahmad Bakery'},       expiryDate:new Date(Date.now()+18*3600000) },
+    // { _id:'d3', foodName:'Fresh Vegetables',  category:'raw',      quantity:8,  unit:'kg',       pickupAddress:'Matta, Swat',    donor:{name:'Matta Market'},       expiryDate:new Date(Date.now()+12*3600000) },
+    // { _id:'d4', foodName:'Pasteurised Milk',  category:'dairy',    quantity:20, unit:'liters',   pickupAddress:'Kabal, Swat',    donor:{name:'Kabal Dairy'},        expiryDate:new Date(Date.now()+6*3600000) },
+    // { _id:'d5', foodName:'Cooked Daal',       category:'cooked',   quantity:10, unit:'portions', pickupAddress:'Khwazakhela',    donor:{name:'Community Kitchen'},  expiryDate:new Date(Date.now()+3*3600000) },
+    // { _id:'d6', foodName:'Packaged Biscuits', category:'packaged', quantity:30, unit:'packs',    pickupAddress:'Fizagat',        donor:{name:'Al-Noor Store'},      expiryDate:new Date(Date.now()+72*3600000) },
+    // { _id:'d7', foodName:'Mixed Salad',       category:'raw',      quantity:6,  unit:'portions', pickupAddress:'Mingora, Swat',  donor:{name:'Green Garden'},       expiryDate:new Date(Date.now()+8*3600000) },
+    // { _id:'d8', foodName:'Chicken Karahi',    category:'cooked',   quantity:8,  unit:'plates',   pickupAddress:'Saidu Sharif',   donor:{name:'Taste of Swat'},      expiryDate:new Date(Date.now()+5*3600000) },
+    // { _id:'d9', foodName:'Fresh Yogurt',      category:'dairy',    quantity:5,  unit:'kg',       pickupAddress:'Mingora, Swat',  donor:{name:'Local Dairy Farm'},   expiryDate:new Date(Date.now()+24*3600000) },
   ]
 
   useEffect(() => {
@@ -74,17 +74,32 @@ export default function Home() {
   const handleClaim = async (food) => {
     if (!food?._id) return
     if (!user) {
-      toast.error('Please sign in to claim food.')
+      Swal.fire({
+        icon: 'info',
+        title: 'Sign in required',
+        text: 'Please sign in to claim food.',
+        confirmButtonColor: '#1B3A6B',
+      })
       navigate('/login')
       return
     }
     const allowedRoles = ['ngo', 'user']
     if (!allowedRoles.includes(user.role?.toLowerCase())) {
-      toast.error('Only NGO and regular user accounts can claim donations.')
+      Swal.fire({
+        icon: 'warning',
+        title: 'Not allowed',
+        text: 'Only NGO and regular user accounts can claim donations.',
+        confirmButtonColor: '#1B3A6B',
+      })
       return
     }
     if (requested[food._id]) {
-      toast('Request already sent for this donation.')
+      Swal.fire({
+        icon: 'info',
+        title: 'Already requested',
+        text: 'Request already sent for this donation.',
+        confirmButtonColor: '#1B3A6B',
+      })
       return
     }
 
@@ -99,9 +114,21 @@ export default function Home() {
       setListings((prev) => prev.filter((item) => item._id !== food._id))
       setFiltered((prev) => prev.filter((item) => item._id !== food._id))
       setSelectedFood(null)
-      toast.success(`Request sent to ${food.donor?.name || 'donor'} successfully.`)
+      Swal.fire({
+        icon: 'success',
+        title: 'Request sent!',
+        text: `Request sent to ${food.donor?.name || 'donor'} successfully.`,
+        confirmButtonColor: '#1B3A6B',
+        timer: 2500,
+        timerProgressBar: true,
+      })
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Could not send pickup request.')
+      Swal.fire({
+        icon: 'error',
+        title: 'Could not send request',
+        text: error.response?.data?.message || 'Could not send pickup request.',
+        confirmButtonColor: '#1B3A6B',
+      })
     } finally {
       setClaimingId(null)
     }
@@ -171,16 +198,64 @@ export default function Home() {
         .hfc{transition:transform 0.3s ease,box-shadow 0.3s ease}
         .hfc:hover{box-shadow:0 16px 40px rgba(27,58,107,0.25)!important;animation:none!important}
         .srch:focus-within{border-color:#1B3A6B!important;box-shadow:0 0 0 4px rgba(27,58,107,0.1)!important}
+
+        /* ===== Responsive (sm) ===== */
+        @media (max-width: 768px) {
+          .hero-grid{grid-template-columns:1fr!important;gap:48px!important;padding:56px 20px 48px!important;text-align:center}
+          .hero-h1{font-size:38px!important}
+          .hero-p{margin-left:auto!important;margin-right:auto!important}
+          .hero-stats{justify-content:center!important}
+          .hero-btns{justify-content:center!important}
+          .hero-art{height:300px!important;margin-top:8px}
+          .hero-art .hfc:first-child{width:200px!important;right:0!important;top:0!important}
+          .hero-art .hfc:last-child{left:0!important;bottom:30px!important}
+          .stats-grid{grid-template-columns:repeat(2,1fr)!important}
+          .stats-grid > div:nth-child(2){border-right:none!important}
+          .stats-grid > div{border-bottom:1px solid #D8E2F0}
+          .stats-grid > div:nth-child(3),.stats-grid > div:nth-child(4){border-bottom:none}
+          .listings-wrap{padding:48px 20px!important}
+          .listings-h2{font-size:30px!important}
+          .filters-row{flex-direction:column!important;align-items:stretch!important}
+          .srch{max-width:none!important;width:100%!important}
+          .pills-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+          .pills-row .fpill{flex-shrink:0;white-space:nowrap}
+          .how-grid{grid-template-columns:1fr!important;gap:32px!important}
+          .how-wrap{padding:56px 20px!important}
+          .how-h2{font-size:30px!important}
+          .step-c{padding-right:0!important}
+          .step-arrow{display:none!important}
+          .cta-h2{font-size:30px!important}
+          .cta-wrap{padding:64px 20px!important}
+          .cta-btns{flex-direction:column!important;align-items:stretch!important}
+          .cta-btns a{justify-content:center!important}
+          .nav-inner{padding:0 16px!important}
+          .nav-links .nlnk{display:none!important}
+          .grid-cards{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))!important;gap:14px!important}
+        }
+        @media (max-width: 480px) {
+          .hero-h1{font-size:32px!important}
+          .hero-stats{gap:18px!important}
+          .grid-cards{grid-template-columns:1fr 1fr!important;gap:12px!important}
+          .modal-opts{grid-template-columns:1fr!important}
+          .modal-actions{flex-direction:column!important}
+        }
+
+        @media (max-width: 640px) {
+          .grid-cards {
+          grid-template-columns: 1fr !important;
+          gap: 16px !important;
+        }
+      }
       `}</style>
 
       {/* NAV */}
       <nav style={{background:'rgba(255,255,255,0.95)',backdropFilter:'blur(20px)',borderBottom:'1px solid #D8E2F0',position:'sticky',top:0,zIndex:100,padding:'0 32px',boxShadow:'0 2px 20px rgba(27,58,107,0.06)'}}>
-        <div style={{maxWidth:1140,margin:'0 auto',display:'flex',alignItems:'center',justifyContent:'space-between',height:66}}>
+        <div className="nav-inner" style={{maxWidth:1140,margin:'0 auto',display:'flex',alignItems:'center',justifyContent:'space-between',height:66}}>
           <Link to="/" style={{display:'flex',alignItems:'center',gap:11,textDecoration:'none'}}>
             <div style={{width:38,height:38,background:'linear-gradient(135deg,#1B3A6B,#2A52A0)',borderRadius:11,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,boxShadow:'0 4px 12px rgba(27,58,107,0.3)'}}>🌾</div>
             <span style={{fontFamily:'Fraunces,serif',fontSize:22,fontWeight:800,background:'linear-gradient(135deg,#1B3A6B,#D4A017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>FoodSave</span>
           </Link>
-          <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <div className="nav-links" style={{display:'flex',alignItems:'center',gap:8}}>
             <button className="nlnk" onClick={()=>document.getElementById('ls').scrollIntoView({behavior:'smooth'})}>Browse Food</button>
             <button className="nlnk" onClick={()=>document.getElementById('hw').scrollIntoView({behavior:'smooth'})}>How it works</button>
             {user ? (
@@ -202,25 +277,25 @@ export default function Home() {
       <div style={{background:'linear-gradient(145deg,#0F1C35 0%,#1B3A6B 55%,#162D58 100%)',position:'relative',overflow:'hidden'}}>
         <div style={{position:'absolute',top:-120,right:-120,width:480,height:480,borderRadius:'50%',background:'radial-gradient(circle,rgba(212,160,23,0.15),transparent 70%)',pointerEvents:'none'}}/>
         <div style={{position:'absolute',bottom:-80,left:-80,width:360,height:360,borderRadius:'50%',background:'radial-gradient(circle,rgba(42,82,160,0.3),transparent 70%)',pointerEvents:'none'}}/>
-        <div style={{maxWidth:1140,margin:'0 auto',padding:'90px 32px 80px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:72,alignItems:'center',position:'relative',zIndex:1}}>
+        <div className="hero-grid" style={{maxWidth:1140,margin:'0 auto',padding:'90px 32px 80px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:72,alignItems:'center',position:'relative',zIndex:1}}>
           <div className="au d1">
             <div style={{display:'inline-flex',alignItems:'center',gap:9,background:'rgba(212,160,23,0.15)',border:'1px solid rgba(212,160,23,0.35)',color:'#F0C040',padding:'7px 16px',borderRadius:24,fontSize:13,fontWeight:600,marginBottom:24,backdropFilter:'blur(8px)'}}>
               <span style={{width:8,height:8,background:'#F0C040',borderRadius:'50%',animation:'pulseDot 2s infinite',display:'inline-block'}}/>
               Live donations in your area
             </div>
-            <h1 style={{fontFamily:'Fraunces,serif',fontSize:58,fontWeight:800,lineHeight:1.06,color:'white',marginBottom:22}}>
+            <h1 className="hero-h1" style={{fontFamily:'Fraunces,serif',fontSize:58,fontWeight:800,lineHeight:1.06,color:'white',marginBottom:22}}>
               Good food<br/>
               <em style={{fontStyle:'italic',background:'linear-gradient(135deg,#D4A017,#F0C040)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>deserves a</em><br/>
               second chance.
             </h1>
-            <p style={{fontSize:17,color:'rgba(255,255,255,0.72)',lineHeight:1.75,marginBottom:36,maxWidth:460}}>
+            <p className="hero-p" style={{fontSize:17,color:'rgba(255,255,255,0.72)',lineHeight:1.75,marginBottom:36,maxWidth:460}}>
               FoodSave connects surplus food from restaurants, stores, and homes to communities that need it. Browse freely — no account needed.
             </p>
-            <div style={{display:'flex',gap:14,flexWrap:'wrap'}}>
+            <div className="hero-btns" style={{display:'flex',gap:14,flexWrap:'wrap'}}>
               <button className="hbp" onClick={()=>document.getElementById('ls').scrollIntoView({behavior:'smooth'})}>🍱 Browse Food Now</button>
               <Link to="/register" className="hbs">➕ Donate Food</Link>
             </div>
-            <div style={{display:'flex',gap:28,marginTop:36,flexWrap:'wrap'}}>
+            <div className="hero-stats" style={{display:'flex',gap:28,marginTop:36,flexWrap:'wrap'}}>
               {[['500+','Donations'],['50+','NGOs'],['2,000+','Meals saved']].map(([n,l])=>(
                 <div key={l}>
                   <div style={{fontFamily:'Fraunces,serif',fontSize:24,fontWeight:800,color:'#F0C040'}}>{n}</div>
@@ -230,7 +305,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="au d3" style={{position:'relative',height:420}}>
+          <div className="au d3 hero-art" style={{position:'relative',height:420}}>
             <div style={{position:'absolute',width:340,height:340,background:'linear-gradient(135deg,rgba(212,160,23,0.1),rgba(27,58,107,0.2))',top:'50%',left:'50%',transform:'translate(-50%,-50%)',animation:'blobMove 9s ease-in-out infinite',borderRadius:'60% 40% 30% 70%/60% 30% 70% 40%',border:'1px solid rgba(212,160,23,0.12)'}}/>
             <div className="hfc" style={{position:'absolute',top:10,right:0,width:248,background:'rgba(255,255,255,0.97)',borderRadius:22,padding:20,boxShadow:'0 12px 40px rgba(0,0,0,0.25)',border:'1px solid rgba(212,160,23,0.3)',animation:'float 3s ease-in-out infinite',backdropFilter:'blur(12px)'}}>
               <div style={{fontSize:40,marginBottom:10}}>🍛</div>
@@ -270,7 +345,7 @@ export default function Home() {
 
       {/* STATS */}
       <div style={{background:'white',borderBottom:'1px solid #D8E2F0',padding:'0 32px'}}>
-        <div style={{maxWidth:1140,margin:'0 auto',display:'grid',gridTemplateColumns:'repeat(4,1fr)'}}>
+        <div className="stats-grid" style={{maxWidth:1140,margin:'0 auto',display:'grid',gridTemplateColumns:'repeat(4,1fr)'}}>
           {[['500+','Donations made'],['50+','NGOs registered'],['2,000+','Meals saved'],['200+','Active donors']].map(([n,l],i)=>(
             <div key={i} className={`sbox au d${i+1}`} style={{padding:'26px 22px',textAlign:'center',borderRight:i<3?'1px solid #D8E2F0':'none',borderRadius:0}}>
               <div className="snum" style={{fontFamily:'Fraunces,serif',fontSize:34,fontWeight:800,color:'#1B3A6B',transition:'color 0.3s'}}>{n}</div>
@@ -284,97 +359,99 @@ export default function Home() {
     </div> */}
 
       {/* LISTINGS */}
-      <div style={{maxWidth:1140,margin:'0 auto',padding:'72px 32px'}} id="ls">
+      <div className="listings-wrap" style={{maxWidth:1140,margin:'0 auto',padding:'72px 32px'}} id="ls">
         <div className="au d1" style={{marginBottom:8}}>
           <span style={{display:'inline-block',background:'linear-gradient(135deg,#EEF3FB,#DBEAFE)',color:'#1B3A6B',fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.09em',padding:'5px 14px',borderRadius:7,marginBottom:18,border:'1px solid #BFDBFE'}}>🔵 Live Now</span>
-          <h2 style={{fontFamily:'Fraunces,serif',fontSize:42,fontWeight:800,color:'#0F1C35',marginBottom:12,lineHeight:1.12}}>Available Food Near You</h2>
+          <h2 className="listings-h2" style={{fontFamily:'Fraunces,serif',fontSize:42,fontWeight:800,color:'#0F1C35',marginBottom:12,lineHeight:1.12}}>Available Food Near You</h2>
           <p style={{fontSize:16,color:'#4A5568',maxWidth:520,lineHeight:1.65}}>Everything below is free — browse without an account. Create a free account to claim or donate.</p>
         </div>
 
         {/* Filters */}
-        <div className="au d2" style={{display:'flex',alignItems:'center',gap:10,margin:'32px 0 28px',flexWrap:'wrap'}}>
+        <div className="au d2 filters-row" style={{display:'flex',alignItems:'center',gap:10,margin:'32px 0 28px',flexWrap:'wrap'}}>
           <div className="srch" style={{display:'flex',alignItems:'center',gap:10,background:'white',border:'2px solid #D8E2F0',borderRadius:12,padding:'10px 16px',minWidth:240,flex:1,maxWidth:300,transition:'all 0.2s'}}>
             <span style={{fontSize:16}}>🔍</span>
             <input placeholder="Search food or location..." value={search} onChange={e=>setSearch(e.target.value)}
               style={{border:'none',outline:'none',fontFamily:'inherit',fontSize:14,color:'#0F1C35',background:'transparent',width:'100%'}}/>
           </div>
-          {[['all','All'],['cooked','🍳 Cooked'],['raw','🥦 Vegetables'],['bakery','🥖 Bakery'],['dairy','🥛 Dairy'],['packaged','📦 Packaged']].map(([v,l])=>(
-            <button key={v} className={`fpill ${activeFilter===v?'active':''}`} onClick={()=>setActiveFilter(v)}>{l}</button>
-          ))}
-        </div>
-
-        {/* Grid */}
-        {loading ? (
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(290px,1fr))',gap:22}}>
-            {[1,2,3,4,5,6].map(i=>(
-              <div key={i} style={{background:'white',borderRadius:20,overflow:'hidden',border:'1px solid #D8E2F0'}}>
-                <div className="skel" style={{height:164,borderRadius:0}}/>
-                <div style={{padding:18}}>
-                  <div className="skel" style={{height:18,width:'70%',marginBottom:12}}/>
-                  <div className="skel" style={{height:14,width:'90%',marginBottom:8}}/>
-                  <div className="skel" style={{height:14,width:'55%',marginBottom:14}}/>
-                  <div className="skel" style={{height:40}}/>
-                </div>
-              </div>
+          <div className="pills-row">
+            {[['all','All'],['cooked','🍳 Cooked'],['raw','🥦 Vegetables'],['bakery','🥖 Bakery'],['dairy','🥛 Dairy'],['packaged','📦 Packaged']].map(([v,l])=>(
+              <button key={v} className={`fpill ${activeFilter===v?'active':''}`} onClick={()=>setActiveFilter(v)}>{l}</button>
             ))}
           </div>
-        ) : filtered.length===0 ? (
-          <div style={{textAlign:'center',padding:'90px 20px'}}>
-            <div style={{fontSize:60,marginBottom:16}}>🔍</div>
-            <p style={{fontSize:20,fontWeight:700,color:'#4A5568',marginBottom:8,fontFamily:'Fraunces,serif'}}>No results found</p>
-            <p style={{fontSize:15,color:'#8A96A8'}}>Try a different category or search term</p>
+        </div>
+
+      {/* Grid */}
+{loading ? (
+  <div className="grid-cards" style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:22}}>
+    {[1,2,3,4,5,6].map(i=>(
+      <div key={i} style={{background:'white',borderRadius:20,overflow:'hidden',border:'1px solid #D8E2F0'}}>
+        <div className="skel" style={{height:164,borderRadius:0}}/>
+        <div style={{padding:18}}>
+          <div className="skel" style={{height:18,width:'70%',marginBottom:12}}/>
+          <div className="skel" style={{height:14,width:'90%',marginBottom:8}}/>
+          <div className="skel" style={{height:14,width:'55%',marginBottom:14}}/>
+          <div className="skel" style={{height:40}}/>
+        </div>
+      </div>
+    ))}
+  </div>
+) : filtered.length===0 ? (
+  <div style={{textAlign:'center',padding:'90px 20px'}}>
+    <div style={{fontSize:60,marginBottom:16}}>🔍</div>
+    <p style={{fontSize:20,fontWeight:700,color:'#4A5568',marginBottom:8,fontFamily:'Fraunces,serif'}}>No results found</p>
+    <p style={{fontSize:15,color:'#8A96A8'}}>Try a different category or search term</p>
+  </div>
+) : (
+  <div className="grid-cards" style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:22}}>
+    {filtered.map((food,i)=>{
+      const name=food.foodName||food.name
+      const c=food.category||food.cat||'other'
+      const qty=`${food.quantity||''} ${food.unit||''}`.trim()
+      const addr=food.pickupAddress||food.loc||''
+      const dn=food.donor?.name||'Anonymous'
+      const hrs=food.expiryDate?getHrs(food.expiryDate):null
+      const chip=getChip(hrs)
+      const cf=cat[c]||cat.other
+      return (
+        <div key={food._id} className={`food-card au d${Math.min(i+1,6)}`} onClick={()=>setSelectedFood(food)} style={{position:'relative'}}>
+          <div className="gold-bar" style={{position:'absolute',bottom:0,left:0,height:3,width:0,background:'linear-gradient(90deg,#1B3A6B,#D4A017)',zIndex:2}}/>
+          <div style={{height:164,background:cf.ib,display:'flex',alignItems:'center',justifyContent:'center',position:'relative',overflow:'hidden'}}>
+            <span className="femoji">{cf.e}</span>
+            <div style={{position:'absolute',top:12,right:12}}>
+              <span style={{background:cf.bg,color:cf.c,fontSize:11,fontWeight:700,padding:'4px 10px',borderRadius:20}}>{cf.label}</span>
+            </div>
           </div>
-        ) : (
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(290px,1fr))',gap:22}}>
-            {filtered.map((food,i)=>{
-              const name=food.foodName||food.name
-              const c=food.category||food.cat||'other'
-              const qty=`${food.quantity||''} ${food.unit||''}`.trim()
-              const addr=food.pickupAddress||food.loc||''
-              const dn=food.donor?.name||'Anonymous'
-              const hrs=food.expiryDate?getHrs(food.expiryDate):null
-              const chip=getChip(hrs)
-              const cf=cat[c]||cat.other
-              return (
-                <div key={food._id} className={`food-card au d${Math.min(i+1,6)}`} onClick={()=>setSelectedFood(food)}>
-                  <div className="gold-bar" style={{position:'absolute',bottom:0,left:0,height:3,width:0,background:'linear-gradient(90deg,#1B3A6B,#D4A017)',zIndex:2}}/>
-                  <div style={{height:164,background:cf.ib,display:'flex',alignItems:'center',justifyContent:'center',position:'relative',overflow:'hidden'}}>
-                    <span className="femoji">{cf.e}</span>
-                    <div style={{position:'absolute',top:12,right:12}}>
-                      <span style={{background:cf.bg,color:cf.c,fontSize:11,fontWeight:700,padding:'4px 10px',borderRadius:20}}>{cf.label}</span>
-                    </div>
-                  </div>
-                  <div style={{padding:18}}>
-                    <h3 style={{fontFamily:'Fraunces,serif',fontSize:18,fontWeight:700,color:'#0F1C35',marginBottom:10,lineHeight:1.2}}>{name}</h3>
-                    <div style={{display:'flex',flexDirection:'column',gap:6,marginBottom:12}}>
-                      <div style={{display:'flex',alignItems:'center',gap:7,fontSize:13,color:'#4A5568'}}>
-                        <span>📦</span><strong style={{color:'#0F1C35'}}>{qty}</strong>
-                      </div>
-                      <div style={{display:'flex',alignItems:'center',gap:7,fontSize:13,color:'#4A5568'}}>
-                        <span>📍</span>{addr}
-                      </div>
-                      {chip&&<span style={{display:'inline-flex',alignItems:'center',gap:5,fontSize:12,fontWeight:700,padding:'4px 10px',borderRadius:7,background:chip.bg,color:chip.color,width:'fit-content'}}>{chip.label}</span>}
-                    </div>
-                    <div style={{display:'flex',alignItems:'center',gap:9,paddingTop:12,borderTop:'1px solid #EEF3FB',marginBottom:14}}>
-                      <div style={{width:30,height:30,borderRadius:9,background:'linear-gradient(135deg,#1B3A6B,#2A52A0)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:'white',flexShrink:0}}>
-                        {dn.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <div style={{fontSize:13,fontWeight:700,color:'#0F1C35'}}>{dn}</div>
-                        <div style={{fontSize:11,color:'#8A96A8'}}>✓ Verified donor</div>
-                      </div>
-                    </div>
-                    <button className="cbtn" onClick={e=>{e.stopPropagation();handleClaim(food)}}
-                      disabled={claimingId===food._id || requested[food._id]}
-                      style={{width:'100%',background:'linear-gradient(135deg,#1B3A6B,#2A52A0)',color:'white',border:'none',padding:'12px',borderRadius:11,fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'inherit',display:'flex',alignItems:'center',justifyContent:'center',gap:7,boxShadow:'0 4px 16px rgba(27,58,107,0.3)'}}>
-                      {claimingId===food._id ? 'Requesting…' : requested[food._id] ? 'Requested' : '👆 Claim this food'}
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
+          <div style={{padding:18}}>
+            <h3 style={{fontFamily:'Fraunces,serif',fontSize:18,fontWeight:700,color:'#0F1C35',marginBottom:10,lineHeight:1.2}}>{name}</h3>
+            <div style={{display:'flex',flexDirection:'column',gap:6,marginBottom:12}}>
+              <div style={{display:'flex',alignItems:'center',gap:7,fontSize:13,color:'#4A5568'}}>
+                <span>📦</span><strong style={{color:'#0F1C35'}}>{qty}</strong>
+              </div>
+              <div style={{display:'flex',alignItems:'center',gap:7,fontSize:13,color:'#4A5568'}}>
+                <span>📍</span>{addr}
+              </div>
+              {chip&&<span style={{display:'inline-flex',alignItems:'center',gap:5,fontSize:12,fontWeight:700,padding:'4px 10px',borderRadius:7,background:chip.bg,color:chip.color,width:'fit-content'}}>{chip.label}</span>}
+            </div>
+            <div style={{display:'flex',alignItems:'center',gap:9,paddingTop:12,borderTop:'1px solid #EEF3FB',marginBottom:14}}>
+              <div style={{width:30,height:30,borderRadius:9,background:'linear-gradient(135deg,#1B3A6B,#2A52A0)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:'white',flexShrink:0}}>
+                {dn.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <div style={{fontSize:13,fontWeight:700,color:'#0F1C35'}}>{dn}</div>
+                <div style={{fontSize:11,color:'#8A96A8'}}>✓ Verified donor</div>
+              </div>
+            </div>
+            <button className="cbtn" onClick={e=>{e.stopPropagation();handleClaim(food)}}
+              disabled={claimingId===food._id || requested[food._id]}
+              style={{width:'100%',background:'linear-gradient(135deg,#1B3A6B,#2A52A0)',color:'white',border:'none',padding:'12px',borderRadius:11,fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'inherit',display:'flex',alignItems:'center',justifyContent:'center',gap:7,boxShadow:'0 4px 16px rgba(27,58,107,0.3)'}}>
+              {claimingId===food._id ? 'Requesting…' : requested[food._id] ? 'Requested' : '👆 Claim this food'}
+            </button>
           </div>
-        )}
+        </div>
+      )
+    })}
+  </div>
+)}
 
         <div className="au" style={{textAlign:'center',marginTop:52}}>
           <p style={{fontSize:14,color:'#8A96A8',marginBottom:18}}>Want to get notified of new listings? Create a free account.</p>
@@ -383,15 +460,15 @@ export default function Home() {
       </div>
 
       {/* HOW IT WORKS */}
-      <div style={{background:'linear-gradient(145deg,#0F1C35,#1B3A6B)',padding:'80px 32px',position:'relative',overflow:'hidden'}} id="hw">
+      <div className="how-wrap" style={{background:'linear-gradient(145deg,#0F1C35,#1B3A6B)',padding:'80px 32px',position:'relative',overflow:'hidden'}} id="hw">
         <div style={{position:'absolute',top:-100,right:-100,width:400,height:400,borderRadius:'50%',background:'radial-gradient(circle,rgba(212,160,23,0.1),transparent 70%)',pointerEvents:'none'}}/>
         <div style={{maxWidth:1140,margin:'0 auto',position:'relative',zIndex:1}}>
           <div className="au d1" style={{marginBottom:52}}>
             <span style={{display:'inline-block',background:'rgba(212,160,23,0.15)',border:'1px solid rgba(212,160,23,0.3)',color:'#F0C040',fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.09em',padding:'5px 14px',borderRadius:7,marginBottom:18}}>Simple process</span>
-            <h2 style={{fontFamily:'Fraunces,serif',fontSize:42,fontWeight:800,color:'white',marginBottom:10,lineHeight:1.12}}>How FoodSave works</h2>
+            <h2 className="how-h2" style={{fontFamily:'Fraunces,serif',fontSize:42,fontWeight:800,color:'white',marginBottom:10,lineHeight:1.12}}>How FoodSave works</h2>
             <p style={{fontSize:16,color:'rgba(255,255,255,0.6)',maxWidth:480}}>Three simple steps — from donation to delivery</p>
           </div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:36}}>
+          <div className="how-grid" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:36}}>
             {[
               {num:'01',e:'🍱',t:'Donor lists food',d:'Restaurants, stores, and individuals post surplus food with quantity, category, and expiry details.'},
               {num:'02',e:'🏢',t:'NGO requests pickup',d:'Registered NGOs or individuals browse listings and send a pickup request to the donor instantly.'},
@@ -402,7 +479,7 @@ export default function Home() {
                 <div className="sicon" style={{width:58,height:58,background:'rgba(255,255,255,0.1)',borderRadius:18,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,marginBottom:18,border:'1px solid rgba(255,255,255,0.1)'}}>{s.e}</div>
                 <h3 style={{fontFamily:'Fraunces,serif',fontSize:21,fontWeight:700,color:'white',marginBottom:10}}>{s.t}</h3>
                 <p style={{fontSize:14,color:'rgba(255,255,255,0.65)',lineHeight:1.65}}>{s.d}</p>
-                {i<2&&<div style={{position:'absolute',top:72,right:-18,color:'rgba(212,160,23,0.4)',fontSize:26}}>→</div>}
+                {i<2&&<div className="step-arrow" style={{position:'absolute',top:72,right:-18,color:'rgba(212,160,23,0.4)',fontSize:26}}>→</div>}
               </div>
             ))}
           </div>
@@ -410,12 +487,12 @@ export default function Home() {
       </div>
 
       {/* CTA */}
-      <div style={{padding:'88px 32px',textAlign:'center',background:'white'}}>
+      <div className="cta-wrap" style={{padding:'88px 32px',textAlign:'center',background:'white'}}>
         <div style={{maxWidth:640,margin:'0 auto'}} className="au">
           <div style={{width:84,height:84,background:'linear-gradient(135deg,#EEF3FB,#DBEAFE)',borderRadius:26,display:'flex',alignItems:'center',justifyContent:'center',fontSize:42,margin:'0 auto 28px',animation:'float 3.5s ease-in-out infinite',boxShadow:'0 8px 28px rgba(27,58,107,0.12)',border:'2px solid #BFDBFE'}}>🌍</div>
-          <h2 style={{fontFamily:'Fraunces,serif',fontSize:44,fontWeight:800,color:'#0F1C35',marginBottom:16,lineHeight:1.12}}>Ready to make a difference?</h2>
+          <h2 className="cta-h2" style={{fontFamily:'Fraunces,serif',fontSize:44,fontWeight:800,color:'#0F1C35',marginBottom:16,lineHeight:1.12}}>Ready to make a difference?</h2>
           <p style={{fontSize:17,color:'#4A5568',marginBottom:36,lineHeight:1.65}}>Join hundreds of donors, NGOs, and volunteers already fighting food waste in Swat and beyond.</p>
-          <div style={{display:'flex',gap:14,justifyContent:'center',flexWrap:'wrap'}}>
+          <div className="cta-btns" style={{display:'flex',gap:14,justifyContent:'center',flexWrap:'wrap'}}>
             <Link to="/register" className="ctap">🌾 Start Donating</Link>
             <Link to="/register" className="ctas">🏢 Register as NGO</Link>
           </div>
@@ -460,7 +537,7 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:22}}>
+                <div className="modal-opts" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:22}}>
                   {[{k:'self',e:'🚶',t:'Self Pickup',s:"I'll go collect it"},{k:'driver',e:'🚗',t:'Request Driver',s:'Assign a driver'}].map(o=>(
                     <div key={o.k} className={`mopt ${pickupOption===o.k?'sel':''}`} onClick={()=>setPickupOption(o.k)}>
                       <div style={{fontSize:30,marginBottom:8}}>{o.e}</div>
@@ -472,7 +549,7 @@ export default function Home() {
                 <div style={{background:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',border:'1px solid #FDE68A',borderRadius:12,padding:'13px 16px',fontSize:13,color:'#A16207',marginBottom:22,lineHeight:1.55}}>
                   🔐 <strong>Account required to claim.</strong> Browsing is free — to claim food or donate, create a free account in 30 seconds.
                 </div>
-                <div style={{display:'flex',gap:10}}>
+                <div className="modal-actions" style={{display:'flex',gap:10}}>
                   <Link to="/register" style={{flex:1,background:'linear-gradient(135deg,#D4A017,#F0C040)',color:'#0F1C35',border:'none',padding:14,borderRadius:11,fontSize:14,fontWeight:800,cursor:'pointer',fontFamily:'inherit',textAlign:'center',textDecoration:'none',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 16px rgba(212,160,23,0.4)'}}>
                     Create Free Account →
                   </Link>

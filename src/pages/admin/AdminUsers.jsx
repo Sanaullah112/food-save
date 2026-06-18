@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import API from '../../utils/api'
 import Navbar from '../../components/Navbar'
 import toast from 'react-hot-toast'
-import { Trash2, Users, Search, UserPlus, X, ChevronDown, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react'
+import Swal from 'sweetalert2'
+import { Trash2, Users, Search, UserPlus, X, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react'
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([])
@@ -14,9 +15,6 @@ export default function AdminUsers() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [newUser, setNewUser] = useState({ name: '', phone: '', password: '', role: 'donor', status: 'Active' })
   
-  // Dropdown states for changing status row-by-row
-  const [activeStatusDropdown, setActiveStatusDropdown] = useState(null)
-
   const fetchUsers = async () => {
     try { 
       const { data } = await API.get('/admin/users')
@@ -28,13 +26,30 @@ export default function AdminUsers() {
   }
 
   const deleteUser = async (id) => {
-    if (!window.confirm('Delete this user?')) return
-    try { 
+    const result = await Swal.fire({
+      title: 'Delete this user?',
+      text: "You won't be able to undo this action.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#DC2626',
+      cancelButtonColor: '#64748B',
+      confirmButtonText: 'Yes, delete it',
+      reverseButtons: true,
+    })
+
+    if (!result.isConfirmed) return
+
+    try {
       await API.delete(`/admin/users/${id}`)
-      toast.success('User deleted')
-      fetchUsers() 
-    } catch { 
-      toast.error('Failed to delete') 
+      await Swal.fire({
+        icon: 'success',
+        title: 'User deleted',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      fetchUsers()
+    } catch {
+      toast.error('Failed to delete')
     }
   }
 
@@ -55,7 +70,6 @@ export default function AdminUsers() {
     try {
       await API.put(`/admin/users/${userId}/status`, { status: newStatus })
       toast.success(`Status updated to ${newStatus}`)
-      setActiveStatusDropdown(null)
       fetchUsers()
     } catch (err) {
       toast.error('Failed to update status')
@@ -101,8 +115,9 @@ export default function AdminUsers() {
         .trow:hover td{background:transparent!important}
         .del-ic{color:#DC2626;background:#FEF2F2;border:1px solid #FECACA;padding:6px;border-radius:8px;cursor:pointer;transition:all 0.2s;display:inline-flex}
         .del-ic:hover{background:#DC2626;color:white;transform:scale(1.05)}
-        .status-btn{display:inline-flex;alignItems:center;gap:4;background:#F1F5F9;border:1px solid #E2E8F0;padding:5px 10px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;color:#475569;transition:all 0.2s}
-        .status-btn:hover{background:#E2E8F0}
+        .status-switch{display:inline-flex;alignItems:center;gap:6px;flexWrap:'wrap'}
+        .status-chip{display:inline-flex;alignItems:center;gap:4px;border:1px solid #E2E8F0;background:#F8FAFC;color:#64748B;padding:6px 9px;border-radius:999px;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s}
+        .status-chip:hover{transform:translateY(-1px);background:#EEF2FF}
         .fpill{padding:7px 16px;border-radius:20px;font-size:13px;font-weight:600;border:2px solid #D8E2F0;background:white;color:#4A5568;cursor:pointer;font-family:inherit;transition:all 0.2s}
         .fpill:hover{border-color:#1B3A6B;color:#1B3A6B;background:#EEF3FB}
         .fpill.active{background:linear-gradient(135deg,#1B3A6B,#2A52A0);color:white;border-color:#1B3A6B}
@@ -113,20 +128,42 @@ export default function AdminUsers() {
         .modal-card{background:white;border-radius:20px;width:100%;maxWidth:450px;box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);overflow:hidden;border:1px solid #E2E8F0}
         .form-input{width:100%;padding:10px 12px;border:2px solid #E2E8F0;border-radius:8px;font-family:inherit;font-size:13px;outline:none;transition:all 0.2s;box-sizing:border-box}
         .form-input:focus{border-color:#1B3A6B}
-        .dropdown-menu{position:absolute;right:0;top:100%;marginTop:4px;background:white;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);zIndex:50;width:130px;overflow:hidden;padding:4px}
-        .dropdown-item{width:100%;padding:8px 12px;textAlign:left;background:none;border:none;fontSize:12px;fontWeight:600;cursor:pointer;display:flex;alignItems:center;gap:6px;borderRadius:6px;color:#334155}
-        .dropdown-item:hover{background:#F1F5F9}
+
+        @media (max-width: 640px){
+          .page-shell{padding:24px 14px !important}
+          .top-row{align-items:flex-start !important}
+          .page-title{font-size:24px !important; line-height:1.2 !important}
+          .page-subtitle{font-size:12px !important}
+          .add-btn{width:100% !important; justify-content:center !important}
+          .filter-row{justify-content:flex-start !important}
+          .search-wrap{width:100% !important}
+          .search-input{width:100% !important}
+          .pill-wrap{width:100% !important; justify-content:flex-start !important}
+          .fpill{padding:6px 12px !important; font-size:12px !important}
+          .table-wrap{overflow-x:auto !important}
+          .table-shell{display:block !important; width:100% !important}
+          .table-shell thead{display:none !important}
+          .table-shell tbody, .table-shell tr, .table-shell td{display:block !important; width:100% !important}
+          .table-shell tr{padding:12px 0 !important; border-bottom:1px solid #F4F6FB !important}
+          .table-shell td{padding:10px 16px !important; border:none !important}
+          .table-shell td:before{content:attr(data-label);display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#8A96A8;margin-bottom:4px}
+          .user-cell{flex-direction:column !important; align-items:flex-start !important}
+          .action-cell{display:flex !important; justify-content:space-between !important; align-items:center !important}
+          .modal-card{margin:0 12px !important; maxWidth:none !important; border-radius:16px !important}
+          .modal-form{padding:18px !important}
+          .modal-two-col{flex-direction:column !important; gap:12px !important}
+        }
       `}</style>
       
       <Navbar />
       
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '36px 28px' }}>
+      <div className="page-shell" style={{ maxWidth: 1200, margin: '0 auto', padding: '36px 28px' }}>
 
         {/* Header Block */}
-        <div className="au d1" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
+        <div className="au d1 top-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
           <div>
-            <h1 style={{ fontFamily: 'Fraunces,serif', fontSize: 30, fontWeight: 800, color: '#0F1C35', marginBottom: 4 }}>Manage Platform Users</h1>
-            <p style={{ fontSize: 14, color: '#8A96A8' }}>{users.length} total system accounts registered</p>
+            <h1 className="page-title" style={{ fontFamily: 'Fraunces,serif', fontSize: 30, fontWeight: 800, color: '#0F1C35', marginBottom: 4 }}>Manage Platform Users</h1>
+            <p className="page-subtitle" style={{ fontSize: 14, color: '#8A96A8' }}>{users.length} total system accounts registered</p>
           </div>
           
           <button className="add-btn" onClick={() => setShowAddModal(true)}>
@@ -135,14 +172,14 @@ export default function AdminUsers() {
         </div>
 
         {/* Filter Management Bar */}
-        <div className="au d1" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginBottom: 20, justifyContent: 'space-between' }}>
-          <div className="srch" style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'white', border: '2px solid #D8E2F0', borderRadius: 10, padding: '8px 14px', transition: 'all 0.2s' }}>
+        <div className="au d1 filter-row" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginBottom: 20, justifyContent: 'space-between' }}>
+          <div className="srch search-wrap" style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'white', border: '2px solid #D8E2F0', borderRadius: 10, padding: '8px 14px', transition: 'all 0.2s' }}>
             <Search size={14} style={{ color: '#8A96A8' }} />
-            <input placeholder="Search name or phone..." value={search} onChange={e => setSearch(e.target.value)}
+            <input className="search-input" placeholder="Search name or phone..." value={search} onChange={e => setSearch(e.target.value)}
               style={{ border: 'none', outline: 'none', fontFamily: 'inherit', fontSize: 13, color: '#0F1C35', background: 'transparent', width: 220 }} />
           </div>
 
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="pill-wrap" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             {['', 'donor', 'ngo', 'driver', 'admin'].map(r => (
               <button key={r} className={`fpill ${filter === r ? 'active' : ''}`} onClick={() => setFilter(r)}>
                 {r === '' ? 'All' : r.toUpperCase() + 's'}
@@ -164,8 +201,8 @@ export default function AdminUsers() {
               <p style={{ fontSize: 13, color: '#8A96A8' }}>Try adjusting your filters or search keywords</p>
             </div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div className="table-wrap" style={{ overflowX: 'auto' }}>
+              <table className="table-shell" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: '#F4F6FB', borderBottom: '1px solid #D8E2F0' }}>
                     {['User Profile', 'Phone Identity', 'Role Designation', 'System Status', 'Registered Date', 'Actions'].map(h => (
@@ -176,34 +213,38 @@ export default function AdminUsers() {
                 <tbody>
                   {filtered.map(u => (
                     <tr key={u._id} className="trow" style={{ borderBottom: '1px solid #F4F6FB' }}>
-                      <td style={{ padding: '14px 18px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <div style={{ width: 34, height: 34, background: 'linear-gradient(135deg,#1B3A6B,#2A52A0)', borderRadius: 10, display: 'flex', alignId: 'center', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: 'white', flexShrink: 0 }}>
+                      <td data-label="User Profile" style={{ padding: '14px 18px' }}>
+                        <div className="user-cell" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div style={{ width: 34, height: 34, background: 'linear-gradient(135deg,#1B3A6B,#2A52A0)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: 'white', flexShrink: 0 }}>
                             {u.name ? u.name.charAt(0).toUpperCase() : '?'}
                           </div>
                           <span style={{ fontSize: 14, fontWeight: 600, color: '#0F1C35' }}>{u.name}</span>
                         </div>
                       </td>
                       
-                      <td style={{ padding: '14px 18px', fontSize: 13, color: '#4A5568' }}>{u.phone || '—'}</td>
-                      <td style={{ padding: '14px 18px' }}>{roleBadge(u.role)}</td>
-                      <td style={{ padding: '14px 18px' }}>{statusBadge(u.status || 'Active')}</td>
-                      <td style={{ padding: '14px 18px', fontSize: 13, color: '#8A96A8' }}>{new Date(u.createdAt).toLocaleDateString()}</td>
+                      <td data-label="Phone Identity" style={{ padding: '14px 18px', fontSize: 13, color: '#4A5568' }}>{u.phone || '—'}</td>
+                      <td data-label="Role Designation" style={{ padding: '14px 18px' }}>{roleBadge(u.role)}</td>
+                      <td data-label="System Status" style={{ padding: '14px 18px' }}>{statusBadge(u.status || 'Active')}</td>
+                      <td data-label="Registered Date" style={{ padding: '14px 18px', fontSize: 13, color: '#8A96A8' }}>{new Date(u.createdAt).toLocaleDateString()}</td>
                       
-                      <td style={{ padding: '14px 18px', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        {/* Status Change Context Menu Trigger */}
-                        <div style={{ position: 'relative' }}>
-                          <button className="status-btn" onClick={() => setActiveStatusDropdown(activeStatusDropdown === u._id ? null : u._id)}>
-                            Status <ChevronDown size={12} />
-                          </button>
-                          
-                          {activeStatusDropdown === u._id && (
-                            <div className="dropdown-menu">
-                              <button className="dropdown-item" onClick={() => handleStatusChange(u._id, 'Active')} style={{ color: '#0369A1' }}><CheckCircle2 size={12} /> Active</button>
-                              <button className="dropdown-item" onClick={() => handleStatusChange(u._id, 'Suspend')} style={{ color: '#B45309' }}><AlertTriangle size={12} /> Suspend</button>
-                              <button className="dropdown-item" onClick={() => handleStatusChange(u._id, 'Reject')} style={{ color: '#B91C1C' }}><XCircle size={12} /> Reject</button>
-                            </div>
-                          )}
+                      <td data-label="Actions" className="action-cell" style={{ padding: '14px 18px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <div className="status-switch">
+                          {[
+                            { label: 'Active', value: 'Active', color: '#0369A1', bg: '#E0F2FE', icon: <CheckCircle2 size={12} /> },
+                            { label: 'Suspend', value: 'Suspend', color: '#B45309', bg: '#FEF3C7', icon: <AlertTriangle size={12} /> },
+                            { label: 'Reject', value: 'Reject', color: '#B91C1C', bg: '#FEE2E2', icon: <XCircle size={12} /> },
+                          ].map(option => (
+                            <button
+                              key={option.value}
+                              className="status-chip"
+                              onClick={() => handleStatusChange(u._id, option.value)}
+                              style={u.status === option.value
+                                ? { background: option.bg, color: option.color, borderColor: option.bg }
+                                : { background: '#F8FAFC', color: '#64748B' }}
+                            >
+                              {option.icon} {option.label}
+                            </button>
+                          ))}
                         </div>
 
                         <button className="del-ic" onClick={() => deleteUser(u._id)}><Trash2 size={14} /></button>
@@ -226,7 +267,7 @@ export default function AdminUsers() {
               <X size={18} style={{ cursor: 'pointer', color: '#64748B' }} onClick={() => setShowAddModal(false)} />
             </div>
 
-            <form onSubmit={handleCreateUser} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <form className="modal-form" onSubmit={handleCreateUser} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 6 }}>Full Account Name</label>
                 <input required placeholder="e.g. Saylani Welfare or John Doe" className="form-input" value={newUser.name} onChange={e => setNewUser({ ...newUser, name: e.target.value })} />
@@ -242,7 +283,7 @@ export default function AdminUsers() {
                 <input required type="password" placeholder="••••••••" className="form-input" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} />
               </div>
 
-              <div style={{ display: 'flex', gap: 12 }}>
+              <div className="modal-two-col" style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 6 }}>Platform Role</label>
                   <select className="form-input" value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })} style={{ appearance: 'none', background: 'white' }}>

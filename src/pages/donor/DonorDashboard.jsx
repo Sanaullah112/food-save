@@ -4,6 +4,7 @@ import API from '../../utils/api'
 import Navbar from '../../components/Navbar'
 import { PlusCircle, Package, Clock, CheckCircle, Trash2, TrendingUp } from 'lucide-react'
 import toast from 'react-hot-toast'
+import Swal from 'sweetalert2'
 
 const T = {p:'#1B3A6B',pd:'#112850',pl:'#EEF3FB',g:'#D4A017',gl:'#FFFBEB',s:'#F4F6FB',b:'#D8E2F0',t:'#0F1C35',tm:'#4A5568',tl:'#8A96A8'}
 
@@ -26,7 +27,18 @@ const css = `
   .add-btn:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 8px 24px rgba(212,160,23,0.5)}
   .skel{background:linear-gradient(90deg,#E8EEF8 25%,#D8E2F0 50%,#E8EEF8 75%);background-size:600px 100%;animation:shimmer 1.4s infinite;border-radius:8px}
   @keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
-  
+
+  /* SweetAlert2 theme overrides */
+  .swal2-popup.fb-popup{border-radius:20px;font-family:'Plus Jakarta Sans',sans-serif;padding:28px 24px}
+  .swal2-popup.fb-popup .swal2-title{font-family:'Fraunces',serif;color:#0F1C35;font-size:22px;font-weight:800}
+  .swal2-popup.fb-popup .swal2-html-container{color:#4A5568;font-size:14px}
+  .swal2-popup.fb-popup .swal2-icon.swal2-warning{border-color:#D4A017;color:#D4A017}
+  .swal2-popup.fb-popup .swal2-icon.swal2-success{border-color:#15803D;color:#15803D}
+  .swal2-popup.fb-popup .swal2-icon.swal2-error{border-color:#DC2626;color:#DC2626}
+  .fb-confirm-btn{background:linear-gradient(135deg,#DC2626,#EF4444)!important;color:white!important;border:none!important;padding:11px 22px!important;border-radius:11px!important;font-size:14px!important;font-weight:700!important;font-family:inherit!important;box-shadow:0 4px 14px rgba(220,38,38,0.3)!important}
+  .fb-cancel-btn{background:#EEF3FB!important;color:#1B3A6B!important;border:none!important;padding:11px 22px!important;border-radius:11px!important;font-size:14px!important;font-weight:700!important;font-family:inherit!important;margin-right:10px!important}
+  .swal2-popup.fb-popup .swal2-actions{gap:0}
+
   /* Responsive Design for Small Screens */
   @media(max-width:768px){
     .donor-header{flex-direction:column!important;align-items:stretch!important}
@@ -68,10 +80,47 @@ export default function DonorDashboard() {
     setLoading(false)
   }
 
-  const deleteListing = async (id) => {
-    if (!window.confirm('Delete this listing?')) return
-    try { await API.delete(`/food/${id}`); toast.success('Deleted!'); fetchListings() }
-    catch { toast.error('Failed to delete') }
+  const deleteListing = async (id, foodName) => {
+    const result = await Swal.fire({
+      title: 'Delete this listing?',
+      html: `<b>${foodName || 'This food listing'}</b> will be permanently removed. This can't be undone.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete it',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true,
+      focusCancel: true,
+      customClass: {
+        popup: 'fb-popup',
+        confirmButton: 'fb-confirm-btn',
+        cancelButton: 'fb-cancel-btn',
+      },
+      buttonsStyling: false,
+    })
+
+    if (!result.isConfirmed) return
+
+    try {
+      await API.delete(`/food/${id}`)
+      Swal.fire({
+        title: 'Deleted!',
+        text: 'Your listing has been removed.',
+        icon: 'success',
+        timer: 1800,
+        showConfirmButton: false,
+        customClass: { popup: 'fb-popup' },
+      })
+      fetchListings()
+    } catch {
+      Swal.fire({
+        title: 'Something went wrong',
+        text: "We couldn't delete this listing. Please try again.",
+        icon: 'error',
+        confirmButtonText: 'OK',
+        customClass: { popup: 'fb-popup', confirmButton: 'fb-confirm-btn' },
+        buttonsStyling: false,
+      })
+    }
   }
 
   useEffect(()=>{fetchListings()},[])
@@ -180,7 +229,7 @@ export default function DonorDashboard() {
                       {l.description&&<div style={{fontSize:12,color:T.tl,background:T.s,padding:'6px 10px',borderRadius:8,marginTop:4}}>{l.description}</div>}
                     </div>
                     <div style={{display:'flex',justifyContent:'flex-end',paddingTop:10,borderTop:'1px solid #F0F4FA'}}>
-                      <button className="del-btn" onClick={()=>deleteListing(l._id)}><Trash2 size={13}/>Delete</button>
+                      <button className="del-btn" onClick={()=>deleteListing(l._id, l.foodName)}><Trash2 size={13}/>Delete</button>
                     </div>
                   </div>
                 </div>

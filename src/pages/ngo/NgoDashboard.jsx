@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import API from "../../utils/api";
 import Navbar from "../../components/Navbar";
+import { useAuth } from "../../context/AuthContext";
 
 // ─── Shared config ─────────────────────────────────────────────────────────────
 const cat = {
@@ -99,6 +100,7 @@ export default function NGODashboard() {
   const [history, setHistory] = useState([]);
   const [filteredHist, setFilteredHist] = useState([]);
   const [histSort, setHistSort] = useState("newest");
+  const { user } = useAuth();
 
   // fetching the donation data
   useEffect(() => {
@@ -123,7 +125,7 @@ export default function NGODashboard() {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const { data } = await API.get("/food/requests/my-history");
+        const { data } = await API.get("/pickup/my");
 
         setHistory(data);
         setFilteredHist(data);
@@ -162,17 +164,32 @@ export default function NGODashboard() {
 
   useEffect(() => {
     let r = [...history];
-    if (histStatus !== "all") r = r.filter((h) => h.status === histStatus);
+    if (histStatus !== "all")
+      r = r.filter((h) => {
+        const normalizedStatus =
+          h.status === "accepted" ||
+          h.status === "collected" ||
+          h.status === "delivered"
+            ? "Claimed"
+            : h.status;
+        return normalizedStatus === histStatus;
+      });
     if (histSearch)
       r = r.filter(
         (h) =>
-          h.foodName.toLowerCase().includes(histSearch.toLowerCase()) ||
-          h.donor?.name.toLowerCase().includes(histSearch.toLowerCase()),
+          (h.listing?.foodName || h.foodName || "")
+            .toLowerCase()
+            .includes(histSearch.toLowerCase()) ||
+          (h.listing?.donor?.name || h.donor?.name || "")
+            .toLowerCase()
+            .includes(histSearch.toLowerCase()),
       );
     r.sort((a, b) =>
       histSort === "newest"
-        ? new Date(b.updatedAt) - new Date(a.updatedAt)
-        : new Date(a.updatedAt) - new Date(b.updatedAt),
+        ? new Date(b.updatedAt || b.requestedAt || 0) -
+          new Date(a.updatedAt || a.requestedAt || 0)
+        : new Date(a.updatedAt || a.requestedAt || 0) -
+          new Date(b.updatedAt || b.requestedAt || 0),
     );
     setFilteredHist(r);
   }, [histSearch, histStatus, history, histSort]);
@@ -186,34 +203,17 @@ export default function NGODashboard() {
     if (!food?._id) return;
 
     try {
-      // 1. Post to your requests endpoint which changes status to "Claimed" & creates the PickupRequest
-      await API.post("/food/requests", {
-        foodId: food._id,
-      });
+      await API.post(`/pickup/${food._id}`);
 
-      // 2. Remove the food item from listings so it disappears from the Browse view
-      if (typeof setListings === "function") {
-        setListings((prev) => prev.filter((f) => f._id !== food._id));
-      }
+      setListings((prev) => prev.filter((f) => f._id !== food._id));
+      setRequested((prev) => ({
+        ...prev,
+        [food._id]: true,
+      }));
 
-      // 3. Mark this item ID as requested locally to toggle button text if cached
-      if (typeof setRequested === "function") {
-        setRequested((prev) => ({
-          ...prev,
-          [food._id]: true,
-        }));
-      }
-
-      // 4. Fetch updated NGO request track history
-      if (typeof setHistory === "function") {
-        const historyRes = await API.get("/food/requests/my-history");
-        setHistory(historyRes.data);
-      }
-
-      // 5. Close any active display modals safely
-      if (typeof setModal === "function") {
-        setModal(null);
-      }
+      const historyRes = await API.get("/pickup/my");
+      setHistory(historyRes.data);
+      setModal(null);
 
       showToast(
         `Request sent to ${food.donor?.name || "donor"} successfully! ✓`,
@@ -307,16 +307,24 @@ export default function NGODashboard() {
         }
         @media (max-width: 640px) {
           .page-wrapper{padding:18px 12px 32px}
-          .tab-btn{padding:10px 14px;font-size:13px}
+          .page-header h1{font-size:28px !important;line-height:1.2 !important}
+          .page-header p{font-size:13px !important}
+          .stats-grid{grid-template-columns:1fr !important; gap:12px !important}
+          .tab-container{flex-direction:column !important; align-items:stretch !important}
+          .tab-btn{width:100% !important; padding:12px 14px !important; font-size:13px !important}
+          .filter-panel{gap:12px !important}
+          .srch{max-width:none !important; min-width:0 !important; width:100% !important}
+          .browse-grid{grid-template-columns:1fr !important; gap:16px !important}
+          .food-card{width:100% !important}
           .fpill{padding:7px 10px;font-size:11px}
-          .filter-panel{gap:12px}
           .history-mobile{margin-bottom:16px}
           .history-mobile > div{padding:14px}
+          .modal-box{max-width:100% !important; margin:0 8px !important; border-radius:18px !important}
         }
       `}</style>
 
       {/* ── NAV ── */}
-      <Navbar />
+      <Navbar /> 
 
       <div className="page-wrapper"
         style={{ maxWidth: 1200, margin: "0 auto" }}
@@ -333,7 +341,7 @@ export default function NGODashboard() {
               lineHeight: 1.1,
             }}
           >
-            Welcome back, Noor Foundation 👋
+            Welcome back, {user?.name || "NGO"} 👋
           </h1>
           <p style={{ fontSize: 15, color: "#6B7280" }}>
             Browse available food donations, request pickups, and track your
